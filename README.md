@@ -35,7 +35,3 @@ A Netflix clone built with React, Firebase, TailwindCSS, Redux, and integrated w
 - 📂 Sectioned movie lists
 - 🧠 GPT search UI with suggestion list
 
----
-
-## 🛠️ Project Setup
-
