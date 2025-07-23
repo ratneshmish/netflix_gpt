@@ -1,84 +1,99 @@
-import React from 'react'
+import React, { useEffect } from 'react';
 import { auth } from '../utils/firebase';
 import { signOut, onAuthStateChanged } from 'firebase/auth';
-import { useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom'
-import { removeUser,addUser } from '../utils/userslice';
-import { useDispatch } from 'react-redux';
-import { useEffect } from 'react';
-import { LOGO_URL } from '../utils/Constants';
+import { useSelector, useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { removeUser, addUser } from '../utils/userslice';
 import { addtogglefeature } from '../utils/Gptslice';
-import { LANG_SELECT } from '../utils/Constants';
+import { LANG_SELECT, LOGO_URL } from '../utils/Constants';
 import { changelang } from '../utils/configslice';
+
 const Header = () => {
-  const user=useSelector((store)=>store.user);
-  const gptsearchselector=useSelector((store)=>store?.gpt?.togglefeature);
-  const dispatch=useDispatch();
-  const navigate=useNavigate();
- const handlegpt=()=>{
+  const user = useSelector((store) => store.user);
+  const gptsearchselector = useSelector((store) => store?.gpt?.togglefeature);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        const { uid, email, displayName } = user;
+        dispatch(addUser({ uid, email, displayName }));
+        navigate('/browse');
+      } else {
+        dispatch(removeUser());
+        navigate('/');
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const handlesignout = () => {
+    signOut(auth)
+      .then(() => dispatch(removeUser()))
+      .catch((error) => console.error(error));
+  };
+
+  const handlegpt = () => {
     dispatch(addtogglefeature());
- }
- const handlechangelanguage=(e)=>{
- dispatch(changelang(e.target.value));
- }
-  useEffect(()=>{
-     const unsubscribe=onAuthStateChanged(auth, (user) => {
-  if (user) {
-    // User is signed in, see docs for a list of available properties
-    // https://firebase.google.com/docs/reference/js/auth.user
-    const {uid,email,displayName} = user;
-   dispatch( addUser({uid:uid,email:email,displayName:displayName}));
-navigate("/browse");
-    // ...
-  } else {
-    // User is signed out
-    // ...
-    navigate("/");
-  dispatch(removeUser());
+  };
 
-  }
-});
- return()=>unsubscribe();
-  },[])
-  const handlesignout=()=>{
-  signOut(auth).then(() => {
-  // Sign-out successful.
-  dispatch(removeUser());
-  
+  const handlechangelanguage = (e) => {
+    dispatch(changelang(e.target.value));
+  };
 
-}).catch((error) => {
-  // An error happened.
-});
-  }
   return (
-    <div className=' w-screen absolute bg-gradient-to-b from-black px-8 py-2 z-20' >
-      <div className='flex justify-between flex-col md:flex-row'>
-      <img className='w-44 mx-auto md:mx-0'
-      src={LOGO_URL}/>
- {user && <div className='flex p-2 my-1 gap-1'>
-      <div className='flex gap-2 items-center'>
-        {gptsearchselector && <select className='m-2 p-2 rounded-lg text-white bg-gray-400 font-serif'
-        onChange={handlechangelanguage}>
-       {LANG_SELECT.map((lan) => (
-    <option key={lan.identifier} value={lan.identifier}>
-      {lan.name}
-    </option>
-  ))}
-        </select>}
-        <button className='py-2 px-4 bg-purple-800 text-white rounded-lg font-serif' onClick={handlegpt}>{gptsearchselector?"Homepage":"GPT Search"}</button>
-       <img 
-          className='w-9 h-9' 
-          src='https://upload.wikimedia.org/wikipedia/commons/0/0b/Netflix-avatar.png' 
-          alt="User Avatar"
-        />
-        
-        <button className='bg-red-600 bg-opacity-50 text-white  p-2 rounded font-bold font-serif hover:underline ' onClick={handlesignout}>Sign Out</button>
-        </div>
-        </div>}
-        </div>
-   
-    </div>
-  )
-}
+    <header className="absolute top-0 left-0 w-full z-20 bg-gradient-to-b from-black px-4 sm:px-6 py-3">
+      <div className="flex flex-col md:flex-row md:justify-between items-center gap-4 w-full">
+        <img src={LOGO_URL} alt="Netflix Logo" className="w-40 sm:w-44" />
 
-export default Header
+        {user && (
+          <div className="flex flex-wrap md:flex-nowrap gap-[1/2] md:gap-2 items-center w-screen ">
+            <div className='flex gap-3 justify-end  w-full md:w-[90%] justify-center md:justify-end'>
+              <div className='flex gap-3'>
+                         {gptsearchselector && (
+              <select
+                className="p-2 rounded-md text-white bg-gray-600"
+                onChange={handlechangelanguage}
+              >
+                {LANG_SELECT.map((lan) => (
+                  <option key={lan.identifier} value={lan.identifier}>
+                    {lan.name}
+                  </option>
+                ))}
+              </select>
+            )}
+
+            <button
+              onClick={handlegpt}
+              className="bg-purple-700 text-white px-4 py-2 rounded-md hover:bg-purple-800 transition"
+            >
+              {gptsearchselector ? 'Homepage' : 'GPT Search'}
+            </button>
+
+            <img
+              src="https://upload.wikimedia.org/wikipedia/commons/0/0b/Netflix-avatar.png"
+              alt="User Avatar"
+              className="w-9 h-9 rounded-full"
+            />
+
+            <button
+              onClick={handlesignout}
+              className="bg-red-600 text-white px-4 py-2 rounded-md font-semibold hover:bg-red-700 transition"
+            >
+              Sign Out
+            </button>
+              </div>
+    
+
+            </div>
+            
+          </div>
+        )}
+      </div>
+    </header>
+  );
+};
+
+export default Header;

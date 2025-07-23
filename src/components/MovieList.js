@@ -3,7 +3,7 @@ import MovieCard from './MovieCard'
 
 const MovieList = ({title,movies}) => {
   return (
-    <div>
+    <div className='mt-20'>
         <div >
             <h1 className='text-2xl font-bold p-2 text-white'>{title}</h1>
             <div className=' flex overflow-x-scroll scrollbar-hide'>
