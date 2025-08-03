@@ -5,3 +5,6 @@
 .scrollbar-hide::-webkit-scrollbar {
   display: none;  /* Chrome, Safari, Edge */
 }
+html,body{
+  overflow-x: hidden;
+}
